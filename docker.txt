@@ -1,0 +1,120 @@
+----About docker
+docker info -- системная информация о Docker и окружении
+
+docker version -- версия окружения Docker
+
+docker search -- поиск контейнера на Docker Hub
+
+docker search --filter "is-official=true"  -- поиск только официальных образов
+
+docker pull -- скачивание образа последней версии
+
+docker pull ...:1.5 -- скачивание контейнера конкретной версии
+
+---- Просмотр и работа с контейнерами
+
+docker images -- список скачанных образов
+
+docker images -q -- список идентификаторов скачанных образов
+
+# Рекомендуется не использовать тег latest, так как версия меняется
+
+curl ... | python -m json.tool -- вывод информации об образе
+
+docker run -- запуск контейнера
+
+docker run -it -- запуск контейнера в интерактивном режиме с выводом псевдотерминала
+docker run --rm -- запуск контейнера с удалением после выполнения
+
+docker stop ... --- остановка контейнера
+
+docker kill ... --- остановка контейнера
+
+docker start ... --- запуск остановленного контейнера
+
+docker pause ... --- заморозка контейнера
+
+docker ps -- список запущенных контейнеров
+
+docker ps -a -- список всех контейнеров
+
+docker ps -aq  --- список всех идентификаторов контейнеров
+
+docker ps --filter status=[exited] --- вывод списка контейнеров с фильтрацией по статусу
+
+docker logs ... -- лог работы контейнера
+
+#docker run --name mysql-test -e MYSQL_ROOT_PASSWORD=docker -d mysql-test -- запуск контейнера с псевдонимом mysql-test с использованием демона 
+#(-d, не предполагает интерактивного взаимодействия), передав параметр
+
+docker exec -it ... bash -- подключение к контейнеру
+
+docker top ... --- вывод списка процессов в отсортирован виде
+
+docker inspect ... --- вывод данных о контейнере
+docker inspect -f '{{.NetworkSettings}}' prometheus  --- вывод конкретного блока из описания для контейнера
+
+docker rm ... --- удалить контейнер ->  docker rmi ... --- удалить образ
+docker rm -v -- удалить контейнер и его тома
+
+# docker run -d -p8889:80 -v /home/user/mywww:/usr/local/apache2/htdocs --name my-httpd httpd -- монтирование папки для хранения данных в контейнере
+# docker run --volumes-from my-httpd --name test httpd cat /usr/local/apache2/htdocs/index.html  -- монтирование директории из контейнера + проверка содержимого
+
+docker diff ... --- показывает отличия контейнера от оригинального образа
+
+docker commit ... --- создание нового образа
+
+docker tag образ[:тэг] [сервер][имя пользователя]имя[тэг]
+
+docker login --- авторизация на docker hub
+
+docker push --- отправка образа в репозиторий
+
+docker history --- просмотр слоев образа
+
+docker export -o example.tar ... --- экспорт образа в tar-файл /* не сохраняются метаданные образа*/
+docker import example.tar ... --- импорт образа из tar-файла
+
+docker save ... --- экспорт образа в tar-файл /* сохраняются метаданные образа*/
+docker load ... --- загрузка образа из tar-файла
+
+---- Пространства имен в контейнере
+
+lsns -p [Pid] --- вывод пространства имен контейнера
+
+ls -l /proc/[Pid]/ns --- виртуальная файловая система
+
+nsenter -t [Pid] --net ip addr --- вход в заданное пространство имен и просмотр инфы об ip контейнера
+ 
+unshare --- команда для запуска процесса в новых пространствах имен
+
+---- Контрольные группы
+
+cat /proc/[Pid]/cgroup
+
+systemd-cgls --- список всех контрольных группы
+
+---- Совместное использование команд
+
+docker rm $ (docker ps -aq)
+
+docker rmi $ (docker images -q)
+
+---- Сетевое взаимодействие
+
+#docker run -d -p 8888:80 --name my-httpd httpd  --- проброс 80 порта контейнера в 8888 порт на хосте
+
+iptables -L DOCKER -t nat --- правила брандмауэра
+
+ ---- Структура Dockerfile
+ FROM
+ RUN
+ ENTRYPOINT ['команда', 'параметр1', 'параметр2']
+ 
+#RUN apt-get update && apt-get install ca-certificates && update-ca-certificates --- пример оптимизации - уменьшение количества слоев
+
+#RUN apt-get update && apt-get install -y ca-certificates && update-ca-certificates && rm -rf /var/lib/apt/lists/* --- пример оптимизации - уменьшение количества слоев + очистка кэша
+
+---- Сборка
+
+docker build -t имя:тег директория --- создание образа
