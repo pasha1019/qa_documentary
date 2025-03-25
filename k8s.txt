@@ -1,0 +1,109 @@
+minikube start
+
+minikube status
+
+kubectl --help
+
+---- Императивный подход
+kubectl create deployment first-deployment  --image=ksxack/lesson1:v0.2 
+
+---- Пример YAML-файла для декларативного создания Деплоймента:
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: declarative-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: goapp
+  template:
+    metadata:
+      labels:
+        app: goapp
+    spec:
+      containers:
+      - name: goapp
+        image: ksxack/lesson1:v0.2
+        ports:
+        - containerPort: 8080
+
+---- Пояснения к манифесту. Пример:
+
+kind                  ## вид ресурса, мы уже знаем 2 вида ресурсов k8s: Namespace, Pod
+metadata.name         ## имя Пода, в данном случае это simple-web.
+metadata.labels       ## ярлыки (или метки) для пода, в этом случае ярлык app=goweb можно использовать для поиска или группировки подов.
+spec.containers.name  ## имя контейнера внутри пода. В поде может быть несколько контейнеров, здесь контейнер называется web.
+spec.containers.image ## образ контейнера, который будет использоваться. Замените значение на свой образ, созданный в предыдущих уроках.
+spec.containers.ports ## указывает порт 8080, который будет открыт для доступа извне.		
+
+---- Применить описание ресурса
+kubectl apply -f deployment.yaml
+
+---- Пример создания namespace в .yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: examples-dev
+
+---- Получить список Деплойментов (контроллеров)
+kubectl get deployments
+kubectl -n rolling get deployment
+
+---- Проверка истории деплоймента:
+kubectl -n rolling rollout history deployment/goapp-deployment #Показывает историю релизов с возможностью просмотреть изменения.
+
+---- Откат к предыдущей версии:
+kubectl -n rolling rollout undo deployment/goapp-deployment #Эта команда откатывает Деплоймент на предыдущую версию в случае проблем с новой версией.
+
+---- Плавный рестарт Подов:
+kubectl -n rolling rollout restart deployment/goapp-deployment #Перезапускает все Поды плавно, без простоя
+
+---- Получить список Неймспейсов
+kubectl get ns
+
+---- Создать Неймспейс императивно
+kubectl create ns examples-dev2
+
+---- Получить список Подов
+kubectl get pod
+kubectl -n [имя_ns] get pods 
+
+---- Ручное изменение ресурсов в кластере
+kubectl edit
+
+---- Смена кластеров
+kubectl config get-contexts                          # показать список контекстов
+kubectl config current-context                       # показать текущий контекст (current-context)
+kubectl config use-context my-cluster-name           # установить my-cluster-name как контекст по умолчанию
+
+---- Создание объектов
+kubectl apply -f ./my-manifest.yaml            # создать объект из файла
+
+kubectl create deployment nginx --image=nginx  # запустить один экземпляр nginx
+
+---- Просмотр информации
+kubectl get pods -o wide                      # Вывести все поды и показать, на каких они нодах
+kubectl describe pods my-pod                  # Просмотреть информацию о поде такую как время старта, количество и причины рестартов, QoS-класс и прочее
+kubectl -n rolling describe deployment goapp-deployment
+kubectl logs -f my-pod                        # Просмотр логов в режиме реального времени
+kubectl top pods                              # Вывести информацию об утилизации ресурсов подами
+
+---- Изменение объектов
+kubectl edit pod my-pod                       # Изменение .yaml манифеста пода
+
+---- Удаление объектов 
+kubectl delete pod my-pod                       # Удаление пода
+kubectl -n web-app-dev delete pod simple-web
+
+---- Погружение в командную оболочку Пода (проваливаемся вовнутрь)
+kubectl exec -it -n namespace-name podname sh   # На конце выбираем оболочку, если нет sh, ставим bash
+
+---- Копируем файл в под
+kubectl cp {{namespace}}/{{podname}}:path/to/directory /local/path  # Копирование файла из Пода
+kubectl cp /local/path namespace/podname:path/to/directory          # Копирования файла в Под
+
+---- Проброс портов
+kubectl port-forward pods/mongo-75f59d57f4-4nd6q 28015:27017  # Проброс порта Пода
+kubectl port-forward mongo-75f59d57f4-4nd6q 28015:27017       # Проброс порта Сервиса
