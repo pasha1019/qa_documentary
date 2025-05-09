@@ -7,3 +7,5 @@ java --version
 Download distr https://jmeter.apache.org/
 
 Unpack tar-archive and run jmeter.sh
+
+Go to unpack directory and run file bin/jmeter
